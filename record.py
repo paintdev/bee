@@ -75,7 +75,7 @@ try:
         args.samplerate = int(device_info["default_samplerate"])
     if args.filename is None:
         args.filename = tempfile.mktemp(
-            prefix="delme_rec_unlimited_", suffix=".wav", dir=""
+            prefix="recording_", suffix=".wav", dir=""
         )
 
     # Make sure the file is opened before recording anything:

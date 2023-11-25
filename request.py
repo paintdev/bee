@@ -1,8 +1,11 @@
 import requests
 import json
-from os import path, environ
+from os import path, environ, listdir, remove
+
 import subprocess
 import whisper
+import re
+
 
 python_path = environ["VIRTUAL_ENV"] + "/bin/python"  # PATH to venv python
 recorder_path = "./record.py"
@@ -21,13 +24,22 @@ recording_process = subprocess.Popen([python_path, recorder_path])
 
 
 def get_answer(memory) -> str:
-    question = input("Ask: ")
+
+    name_pattern = re.compile(r"recording_*")
+    for file_name in listdir("."):
+        if name_pattern.search(file_name):
+            record_name = file_name
+
+    whisper_model = whisper.load_model("medium.en")
+    question = whisper_model.transcribe(record_name).get("text")
+
+    remove("./" + record_name)
 
     data = {
         "model": f"{model}",
         "prompt": f"{question}",
         "stream": False,
-        "context": memory,
+        "context": memory
     }
 
     # Convert the data to JSON format
@@ -47,6 +59,7 @@ def get_answer(memory) -> str:
         response = response.json()
 
         # print(response.text)
+        print(question)
         print("Response:")
         print(response.get("response"))
         print(response.get("total_duration") / 10**9)
@@ -65,8 +78,7 @@ try:
     recording_process.wait(20)
 
 except KeyboardInterrupt:
-    while True:
-        get_answer(memory)
+    get_answer(memory)
 
 except subprocess.TimeoutExpired:
     print("Recording timed out")
