@@ -1,9 +1,10 @@
 import requests
 import json
-from os import path
+from os import path, environ
 import subprocess
+import whisper
 
-python_path = "./Deu/bin/python"
+python_path = environ["VIRTUAL_ENV"] + "/bin/python"  # PATH to venv python
 recorder_path = "./record.py"
 
 model = "mistral"
