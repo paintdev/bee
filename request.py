@@ -1,6 +1,10 @@
 import requests
 import json
 from os import path
+import subprocess
+
+python_path = "./Deu/bin/python"
+recorder_path = "./record.py"
 
 model = "mistral"
 url = "http://localhost:11434/api/generate"
@@ -11,7 +15,11 @@ with open("memory.txt", "r") as file:
     if path.getsize("memory.txt"):
         memory = list(map(int, file_content.split(",")))
 
-while True:
+
+recording_process = subprocess.Popen([python_path, recorder_path])
+
+
+def get_answer(memory) -> str:
     question = input("Ask: ")
 
     data = {
@@ -48,3 +56,16 @@ while True:
 
     else:
         print("Request failed with status code:", response.status_code)
+
+    return response.get("response")
+
+
+try:
+    recording_process.wait(20)
+
+except KeyboardInterrupt:
+    while True:
+        get_answer(memory)
+
+except subprocess.TimeoutExpired:
+    print("Recording timed out")
