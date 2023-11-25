@@ -1,3 +1,4 @@
+import time
 import requests
 import json
 from os import path, environ, listdir, remove
@@ -24,14 +25,17 @@ recording_process = subprocess.Popen([python_path, recorder_path])
 
 
 def get_answer(memory) -> str:
-
     name_pattern = re.compile(r"recording_*")
     for file_name in listdir("."):
         if name_pattern.search(file_name):
             record_name = file_name
 
-    whisper_model = whisper.load_model("medium.en")
+    start = time.process_time()
+    whisper_model = whisper.load_model("small.en")
     question = whisper_model.transcribe(record_name).get("text")
+    stop = time.process_time()
+    print(question)
+    print(stop - start)
 
     remove("./" + record_name)
 
@@ -59,9 +63,9 @@ def get_answer(memory) -> str:
         response = response.json()
 
         # print(response.text)
-        print(question)
+
         print("Response:")
-        print(response.get("response"))
+        print(" " + response.get("response"))
         print(response.get("total_duration") / 10**9)
         memory = response.get("context")
         with open("memory.txt", "w") as file:
