@@ -6,16 +6,20 @@ model = "mistral"
 url = "http://localhost:11434/api/generate"
 memory: list = []
 
-with open("memory.txt","r") as file:
+with open("memory.txt", "r") as file:
     file_content = file.read()
     if path.getsize("memory.txt"):
-        memory = list(map(int, file_content.split(',')))
+        memory = list(map(int, file_content.split(",")))
 
 while True:
-
     question = input("Ask: ")
-    
-    data = {"model": f"{model}", "prompt": f"{question}", "stream": False, "context": memory}
+
+    data = {
+        "model": f"{model}",
+        "prompt": f"{question}",
+        "stream": False,
+        "context": memory,
+    }
 
     # Convert the data to JSON format
     payload = json.dumps(data)
@@ -25,7 +29,6 @@ while True:
 
     # Make the POST request
     response = requests.post(url, data=payload, headers=headers)
-
 
     # Check the response status code and content
     if response.status_code == 200:
@@ -39,9 +42,9 @@ while True:
         print(response.get("response"))
         print(response.get("total_duration") / 10**9)
         memory = response.get("context")
-        with open("memory.txt","w") as file:
-            file.write('')
-            file.write(','.join(map(str, memory)))
-        
+        with open("memory.txt", "w") as file:
+            file.write("")
+            file.write(",".join(map(str, memory)))
+
     else:
         print("Request failed with status code:", response.status_code)
