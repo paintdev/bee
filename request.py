@@ -1,14 +1,14 @@
 import time
 import requests
 import json
-from os import path, environ, listdir, remove
+from os import path, listdir, remove
 
 import subprocess
-import whisper
+from faster_whisper import WhisperModel
 import re
 
 
-python_path = environ["VIRTUAL_ENV"] + "/bin/python"  # PATH to venv python
+python_path = ".venv\Scripts\python.exe"  # PATH to venv python
 recorder_path = "./record.py"
 
 model = "mistral"
@@ -31,11 +31,15 @@ def get_answer(memory) -> str:
             record_name = file_name
 
     start = time.process_time()
-    whisper_model = whisper.load_model("small.en")
-    question = whisper_model.transcribe(record_name).get("text")
+    whisper_model = WhisperModel("small.en", device="cuda", compute_type="float16")
+    question, _ = whisper_model.transcribe(record_name, vad_filter=True)
+    question = list(question)
     stop = time.process_time()
     print(question)
     print(stop - start)
+
+    question = str(question[0]).split(", ")[4][7:-1:1]
+    print("Prompt: " + question)
 
     remove("./" + record_name)
 
@@ -43,7 +47,7 @@ def get_answer(memory) -> str:
         "model": f"{model}",
         "prompt": f"{question}",
         "stream": False,
-        "context": memory
+        "context": memory,
     }
 
     # Convert the data to JSON format
