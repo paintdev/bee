@@ -11,7 +11,7 @@ import re
 python_path = ".venv\Scripts\python.exe"  # PATH to venv python
 recorder_path = "./record.py"
 
-model = "mistral"
+model = "phi"
 url = "http://localhost:11434/api/generate"
 memory: list = []
 
@@ -31,7 +31,7 @@ def get_answer(memory) -> str:
             record_name = file_name
 
     start = time.process_time()
-    whisper_model = WhisperModel("small.en", device="cuda", compute_type="float16")
+    whisper_model = WhisperModel("small.en") #, device="cuda", compute_type="float16")
     question, _ = whisper_model.transcribe(record_name, vad_filter=True)
     question = list(question)
     stop = time.process_time()
@@ -65,11 +65,9 @@ def get_answer(memory) -> str:
 
         # Convert JSON to dictionary
         response = response.json()
-
-        # print(response.text)
-
+        
         print("Response:")
-        print(" " + response.get("response"))
+        print(response.get("response"))
         print(response.get("total_duration") / 10**9)
         memory = response.get("context")
         with open("memory.txt", "w") as file:
@@ -79,14 +77,6 @@ def get_answer(memory) -> str:
     else:
         print("Request failed with status code:", response.status_code)
 
-    return response.get("response")
 
-
-try:
-    recording_process.wait(20)
-
-except KeyboardInterrupt:
-    get_answer(memory)
-
-except subprocess.TimeoutExpired:
-    print("Recording timed out")
+recording_process.wait(20)
+get_answer(memory)

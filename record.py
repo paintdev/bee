@@ -60,9 +60,15 @@ args = parser.parse_args(remaining)
 
 q = queue.Queue()
 
+counter = 0
 
 def callback(indata, frames, time, status):
     """This is called (from a separate thread) for each audio block."""
+    volume_norm = numpy.linalg.norm(indata) * 10
+    print(int(volume_norm))
+    if int(volume_norm) < 5:
+        global counter
+        counter += 1
     if status:
         print(status, file=sys.stderr)
     q.put(indata.copy())
@@ -74,9 +80,7 @@ try:
         # soundfile expects an int, sounddevice provides a float:
         args.samplerate = int(device_info["default_samplerate"])
     if args.filename is None:
-        args.filename = tempfile.mktemp(
-            prefix="recording_", suffix=".wav", dir=""
-        )
+        args.filename = tempfile.mktemp(prefix="recording_", suffix=".wav", dir="")
 
     # Make sure the file is opened before recording anything:
     with sf.SoundFile(
@@ -92,13 +96,18 @@ try:
             channels=args.channels,
             callback=callback,
         ):
-            print("#" * 80)
-            print("press Ctrl+C to stop the recording")
-            print("#" * 80)
             while True:
                 file.write(q.get())
+                print(counter)
+                if counter > 100:
+                    print("Recording finished: " + repr(args.filename))
+                    parser.exit(0)
+
+
 except KeyboardInterrupt:
     print("\nRecording finished: " + repr(args.filename))
     parser.exit(0)
+
+
 except Exception as e:
     parser.exit(type(e).__name__ + ": " + str(e))
