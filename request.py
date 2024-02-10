@@ -31,12 +31,13 @@ def get_answer(memory) -> str:
             record_name = file_name
 
     start = time.process_time()
-    whisper_model = WhisperModel("small.en") #, device="cuda", compute_type="float16")
+    whisper_model = WhisperModel("small.en")
+    # whisper_model = WhisperModel("small.en", device="cuda", compute_type="float16")
     question, _ = whisper_model.transcribe(record_name, vad_filter=True)
     question = list(question)
     stop = time.process_time()
     print(question)
-    print(stop - start)
+    print(f"Whisper took {stop - start:.1f} second(s)")
 
     question = str(question[0]).split(", ")[4][7:-1:1]
     print("Prompt: " + question)
@@ -68,7 +69,8 @@ def get_answer(memory) -> str:
         
         print("Response:")
         print(response.get("response"))
-        print(response.get("total_duration") / 10**9)
+        duration = response.get("total_duration")
+        print(f"{model} took {duration / 10**9}")
         memory = response.get("context")
         with open("memory.txt", "w") as file:
             file.write("")
